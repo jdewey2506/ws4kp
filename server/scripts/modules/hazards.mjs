@@ -25,9 +25,6 @@ class Hazards extends WeatherDisplay {
 		this.showOnProgress = false;
 		this.okToDrawCurrentConditions = false;
 
-		// force a 1-minute refresh time for the most up-to-date hazards
-		this.refreshTime = 60_000;
-
 		// 0 screens skips this during "play"
 		this.timing.totalScreens = 0;
 
@@ -88,7 +85,7 @@ class Hazards extends WeatherDisplay {
 				this.data = filteredAlerts;
 			}
 
-			// every 10 times through the get process (10 minutes), reset the viewed messages
+			// every 10 times through the get process, reset the viewed messages
 			if (this.viewedGetCount >= 10) {
 				this.viewedGetCount = 0;
 				this.viewedAlerts.clear();
@@ -218,7 +215,7 @@ class Hazards extends WeatherDisplay {
 		hazardLines.style.transform = `translateY(-${Math.round(offsetY)}px)`;
 	}
 
-	// after we roll through the hazards once, don't display again until the next refresh (10 minutes)
+	// after we roll through the hazards once, don't display again until the next refresh
 	screenIndexFromBaseCount() {
 		const superValue = super.screenIndexFromBaseCount();
 		// false is returned when we reach the end of the scroll
