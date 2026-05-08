@@ -427,6 +427,17 @@ body {
 		}
 	}
 
+
+	.logo-setting {
+		input {
+			font-family: "Star4000";
+		}
+
+		button {
+			font-family: "Star4000";
+			margin-left: 4px;
+		}
+	}
 	label {
 		display: block;
 		max-width: fit-content;
