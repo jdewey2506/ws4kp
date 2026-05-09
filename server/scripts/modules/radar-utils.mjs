@@ -18,6 +18,97 @@ const getXYFromLatitudeLongitudeMap = (pos) => {
 	return { x, y };
 };
 
+const LOW_ECHO_COLORS = new Set([
+	'49,210,22',
+	'0,142,0',
+	'20,90,15',
+	'10,40,10',
+]);
+
+const LOW_ECHO_CLUSTER_MIN_PIXELS = 12;
+
+const isVisibleRadarPixel = (imageData, pixelIndex) => imageData[pixelIndex + 3] > 0;
+
+const isLowEchoPixel = (imageData, pixelIndex) => LOW_ECHO_COLORS.has(`${imageData[pixelIndex]},${imageData[pixelIndex + 1]},${imageData[pixelIndex + 2]}`);
+
+const isNearBlackPixel = (R, G, B) => R <= 12 && G <= 12 && B <= 12;
+
+const clearRadarPixel = (imageData, pixelIndex) => {
+	imageData[pixelIndex] = 0;
+	imageData[pixelIndex + 1] = 0;
+	imageData[pixelIndex + 2] = 0;
+	imageData[pixelIndex + 3] = 0;
+};
+
+const inspectLowEchoNeighbor = (pixels, visited, stack, width, height, x, y) => {
+	if (x < 0 || x >= width || y < 0 || y >= height) return false;
+
+	const pixel = y * width + x;
+	const pixelIndex = pixel * 4;
+	if (!isVisibleRadarPixel(pixels, pixelIndex)) return false;
+	if (!isLowEchoPixel(pixels, pixelIndex)) return true;
+
+	if (!visited[pixel]) {
+		visited[pixel] = 1;
+		stack.push(pixel);
+	}
+	return false;
+};
+
+const inspectLowEchoCluster = (pixels, visited, width, height, start) => {
+	const stack = [start];
+	const cluster = [];
+	let hasStrongerNeighbor = false;
+	visited[start] = 1;
+
+	while (stack.length > 0) {
+		const current = stack.pop();
+		const currentX = current % width;
+		const currentY = Math.floor(current / width);
+		cluster.push(current);
+
+		for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+			for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+				const shouldInspect = offsetX !== 0 || offsetY !== 0;
+				if (shouldInspect) {
+					hasStrongerNeighbor = inspectLowEchoNeighbor(
+						pixels,
+						visited,
+						stack,
+						width,
+						height,
+						currentX + offsetX,
+						currentY + offsetY,
+					) || hasStrongerNeighbor;
+				}
+			}
+		}
+	}
+
+	return { cluster, hasStrongerNeighbor };
+};
+
+const removeSmallLowEchoClusters = (RadarImageData, width, height) => {
+	const visited = new Uint8Array(width * height);
+	const pixels = RadarImageData.data;
+
+	for (let y = 0; y < height; y += 1) {
+		for (let x = 0; x < width; x += 1) {
+			const start = y * width + x;
+			const startPixelIndex = start * 4;
+			const shouldInspect = !visited[start]
+				&& isVisibleRadarPixel(pixels, startPixelIndex)
+				&& isLowEchoPixel(pixels, startPixelIndex);
+
+			if (shouldInspect) {
+				const { cluster, hasStrongerNeighbor } = inspectLowEchoCluster(pixels, visited, width, height, start);
+				if (cluster.length < LOW_ECHO_CLUSTER_MIN_PIXELS && !hasStrongerNeighbor) {
+					cluster.forEach((pixel) => clearRadarPixel(pixels, pixel * 4));
+				}
+			}
+		}
+	}
+};
 const getXYFromLatitudeLongitudeDoppler = (pos, offsetX, offsetY) => {
 	const imgHeight = 6000;
 	const imgWidth = 2800;
@@ -61,7 +152,7 @@ const removeDopplerRadarImageNoise = (RadarContext) => {
 			let A = RadarImageData.data[i + 3];
 
 			// is this pixel the old rgb?
-			if ((R === 0 && G === 0 && B === 0)
+			if (isNearBlackPixel(R, G, B)
 				|| (R === 0 && G === 236 && B === 236)
 				|| (R === 1 && G === 160 && B === 246)
 				|| (R === 0 && G === 0 && B === 246)) {
@@ -130,6 +221,7 @@ const removeDopplerRadarImageNoise = (RadarContext) => {
 			RadarImageData.data[i + 3] = A;
 		}
 
+		removeSmallLowEchoClusters(RadarImageData, canvas.width, canvas.height);
 		RadarContext.putImageData(RadarImageData, 0, 0);
 	} catch (error) {
 		console.error(`Error in removeDopplerRadarImageNoise: ${error.message}. Canvas size: ${canvas.width}x${canvas.height}`);
