@@ -24,6 +24,7 @@ class Hazards extends WeatherDisplay {
 		super(navId, elemId, 'Hazards', defaultActive);
 		this.showOnProgress = false;
 		this.okToDrawCurrentConditions = false;
+		this.refreshTime = 600_000;
 
 		// 0 screens skips this during "play"
 		this.timing.totalScreens = 0;

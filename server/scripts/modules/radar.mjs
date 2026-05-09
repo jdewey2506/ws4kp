@@ -19,6 +19,7 @@ class Radar extends WeatherDisplay {
 
 		this.okToDrawCurrentConditions = false;
 		this.okToDrawCurrentDateTime = false;
+		this.refreshTime = 600_000;
 
 		// set max images
 		this.dopplerRadarImageMax = 6;

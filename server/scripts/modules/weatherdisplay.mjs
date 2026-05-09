@@ -519,6 +519,11 @@ class WeatherDisplay {
 	setAutoReload() {
 		if (this.autoRefreshHandle !== null) return;
 
+		if (this.refreshTime) {
+			this.autoRefreshHandle = setInterval(() => this.getData(this.weatherParameters, true), this.refreshTime);
+			return;
+		}
+
 		this.autoRefreshHandle = setTimeout(() => {
 			this.getData(this.weatherParameters, true);
 			this.autoRefreshHandle = setInterval(
