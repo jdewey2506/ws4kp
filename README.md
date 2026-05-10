@@ -123,7 +123,14 @@ To run via Docker using a "server deployment" with a caching proxy server for mu
 
 ```bash
 docker build -f Dockerfile.server -t ws4kp-server .
-docker run -p 8080:8080 ws4kp-server
+docker run -d --name ws4kp -p 8080:8080 ws4kp-server
+
+If you already created a stopped container with that name, remove it first:
+docker rm ws4kp
+```
+
+```Using docker-compose.yml for repeatable deployment
+docker compose up -d --build
 ```
 
 To run via Docker Compose (shown here in static deployment mode):
