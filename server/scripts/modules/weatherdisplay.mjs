@@ -10,14 +10,7 @@ import settings from './settings.mjs';
 import { elemForEach } from './utils/elem.mjs';
 import { debugFlag } from './utils/debug.mjs';
 
-const TOP_OF_HOUR_REFRESH_INTERVAL = 3_600_000;
-
-const msUntilNextTopOfHour = () => {
-	const now = new Date();
-	const nextRefresh = new Date(now);
-	nextRefresh.setHours(now.getHours() + 1, 0, 0, 0);
-	return nextRefresh.getTime() - now.getTime();
-};
+const DEFAULT_REFRESH_INTERVAL = 1_200_000;
 
 class WeatherDisplay {
 	constructor(navId, elemId, name, defaultEnabled) {
@@ -524,13 +517,7 @@ class WeatherDisplay {
 			return;
 		}
 
-		this.autoRefreshHandle = setTimeout(() => {
-			this.getData(this.weatherParameters, true);
-			this.autoRefreshHandle = setInterval(
-				() => this.getData(this.weatherParameters, true),
-				TOP_OF_HOUR_REFRESH_INTERVAL,
-			);
-		}, msUntilNextTopOfHour());
+		this.autoRefreshHandle = setInterval(() => this.getData(this.weatherParameters, true), DEFAULT_REFRESH_INTERVAL);
 	}
 }
 
