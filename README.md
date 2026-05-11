@@ -392,3 +392,7 @@ This project is based on the work of [Mike Battaglia](https://github.com/vbguyny
 This web site should NOT be used in life threatening weather situations, or be relied on to inform the public of such situations. The Internet is an unreliable network subject to server and network outages and by nature is not suitable for such mission critical use. If you require such access to NWS data, please consider one of their subscription services. The authors of this web site shall not be held liable in the event of injury, death or property damage that occur as a result of disregarding this warning.
 
 The WeatherSTAR 4000 unit and technology is owned by The Weather Channel. This web site is a free, non-profit work by fans. All of the back ground graphics of this web site were created from scratch.  The icons were created by Charles Abel and Nick Smith (http://twcclassics.com/downloads/icons.html) as well as by Malek Masoud.  The fonts were originally created by Nick Smith (http://twcclassics.com/downloads/fonts.html).
+
+# mckinney.png corner logo (now controlled by a file picker)
+Font is FF Meta Pro Condensed Black
+source: https://www.myfonts.com/products/cond-pro-black-ff-meta-364664
