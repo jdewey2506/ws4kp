@@ -7,4 +7,7 @@ services:
       - "8080:8080"
     env_file:
       - .env
+    volumes:
+      - ./docker/custom-corner-logo.js:/app/server/scripts/custom.js:ro
+      - ./docker/custom-corner-logo.png:/app/dist/images/logos/custom-corner-logo.png:ro
     restart: unless-stopped
