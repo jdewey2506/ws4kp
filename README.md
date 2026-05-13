@@ -130,7 +130,7 @@ docker rm ws4kp
 ```
 
 ```Using docker-compose.yml for repeatable deployment
-docker compose up -d --build
+docker compose up -d --build --force-recreate
 ```
 
 To run via Docker Compose (shown here in static deployment mode):
