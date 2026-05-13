@@ -273,7 +273,7 @@ const parseData = (data) => {
 	data.Temperature = temperatureConverter(observations.temperature.value);
 	data.TemperatureUnit = temperatureConverter.units;
 	data.DewPoint = temperatureConverter(observations.dewpoint.value);
-	data.Ceiling = metersConverter(observations.cloudLayers[0]?.base?.value ?? 0);
+	data.Ceiling = metersConverter(getCeilingLayer(observations.cloudLayers)?.base?.value ?? 0);
 	data.CeilingUnit = metersConverter.units;
 	data.Visibility = kilometersConverter(observations.visibility.value);
 	data.VisibilityUnit = kilometersConverter.units;
@@ -346,6 +346,15 @@ const backfillProperty = (data, key) => data.reduce(
 	},
 	{ value: null }, // null is the default provided by the api
 );
+
+const getCeilingLayer = (cloudLayers = []) => {
+	const nonCeilingAmounts = ['CLR', 'FEW', 'SCT'];
+	return cloudLayers.find((layer) => (
+		layer?.base?.value !== null
+		&& layer?.base?.value !== undefined
+		&& !nonCeilingAmounts.includes(layer.amount)
+	));
+};
 
 const display = new CurrentWeather(1, 'current-weather');
 registerDisplay(display);
