@@ -3,6 +3,11 @@
 
 #regional-forecast-html.weather-display {
 	background-image: url('../images/backgrounds/5.png');
+
+	.header .logo img {
+		width: 76px;
+		height: 60px;
+	}
 }
 
 .weather-display .main.regional-forecast {
