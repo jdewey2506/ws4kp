@@ -9,6 +9,7 @@
  * @param {number} options.initialDelay - Seconds before scrolling starts (default: 3.0)
  * @param {number} options.finalPause - Seconds after scrolling ends (default: 3.0)
  * @param {number} options.staticDisplay - Seconds for static display when no scrolling needed (default: same as initialDelay + finalPause)
+ * @param {number} options.maxScrollTime - Maximum seconds to spend scrolling (default: no limit)
  * @param {number} options.baseDelay - Milliseconds per timing count (default: 40)
  * @returns {Object} Timing configuration object with delay array, scrollTiming, and baseDelay
  */
@@ -18,6 +19,7 @@ const calculateScrollTiming = (list, container, options = {}) => {
 		initialDelay = 3.0,
 		finalPause = 3.0,
 		staticDisplay = initialDelay + finalPause,
+		maxScrollTime = Infinity,
 		baseDelay = 40,
 	} = options;
 
@@ -30,7 +32,7 @@ const calculateScrollTiming = (list, container, options = {}) => {
 	const scrollableHeight = Math.max(0, contentHeight - displayHeight);
 
 	// calculate scroll time based on actual distance and speed
-	const scrollTimeSeconds = scrollableHeight > 0 ? scrollableHeight / scrollSpeed : 0;
+	const scrollTimeSeconds = scrollableHeight > 0 ? Math.min(scrollableHeight / scrollSpeed, maxScrollTime) : 0;
 
 	// convert seconds to timing counts
 	const initialCounts = secondsToTimingCounts(initialDelay);

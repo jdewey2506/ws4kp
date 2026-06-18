@@ -127,6 +127,7 @@ class Hazards extends WeatherDisplay {
 		// get the list element and populate
 		const list = this.elem.querySelector('.hazard-lines');
 		list.innerHTML = '';
+		this.resetScrollCache();
 
 		// filter viewed alerts
 		const unViewed = this.data.filter((data) => !this.viewedAlerts.has(data.id));
@@ -144,6 +145,7 @@ class Hazards extends WeatherDisplay {
 		});
 
 		list.append(...lines);
+		this.resetScrollCache();
 
 		// no alerts, skip this display by setting timing to zero
 		if (lines.length === 0) {
@@ -162,6 +164,7 @@ class Hazards extends WeatherDisplay {
 		const container = this.elem.querySelector('.main');
 		const timingConfig = calculateScrollTiming(list, container, {
 			finalPause: 2.0, // shorter final pause for hazards
+			maxScrollTime: 90.0, // keep very long hazard products from stalling the playlist
 		});
 
 		// Apply the calculated timing
@@ -170,6 +173,20 @@ class Hazards extends WeatherDisplay {
 		this.scrollTiming = timingConfig.scrollTiming;
 
 		this.calcNavTiming();
+	}
+
+	resetScrollCache() {
+		this.scrollCache = {
+			displayHeight: 0,
+			contentHeight: 0,
+			maxOffset: 0,
+			hazardLines: null,
+		};
+
+		const hazardLines = this.elem?.querySelector('.hazard-lines');
+		if (hazardLines) {
+			hazardLines.style.transform = '';
+		}
 	}
 
 	drawCanvas() {
