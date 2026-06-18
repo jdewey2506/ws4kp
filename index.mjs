@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import fs from 'fs';
-import { readFile } from 'fs/promises';
+import { appendFile, readFile } from 'fs/promises';
 import {
 	weatherProxy, radarProxy, outlookProxy, mesonetProxy, forecastProxy,
 } from './proxy/handlers.mjs';
@@ -16,12 +16,15 @@ const stationInfo = JSON.parse(await readFile('./datagenerators/output/stations.
 
 const app = express();
 const port = process.env.WS4KP_PORT ?? 8080;
+const musicPlayHistoryFile = './music-play-history.txt';
 
 // Set X-Weatherstar header globally for playlist fallback detection
 app.use((req, res, next) => {
 	res.setHeader('X-Weatherstar', 'true');
 	next();
 });
+
+app.use(express.json({ limit: '2kb' }));
 
 // template engine
 app.set('view engine', 'ejs');
@@ -91,6 +94,32 @@ const geoip = (req, res) => {
 	res.json({});
 };
 
+const cleanLogValue = (value) => String(value ?? '').replace(/[\r\n\t]/g, ' ').trim();
+
+const appendMusicPlayHistory = async (req, res) => {
+	const trackNumber = Number.parseInt(req.body?.trackNumber, 10);
+	const trackName = cleanLogValue(req.body?.trackName);
+	const fileName = cleanLogValue(req.body?.fileName);
+
+	if (!trackName || !fileName) {
+		res.status(400).json({ error: 'trackName and fileName are required' });
+		return;
+	}
+
+	const timestamp = new Date().toISOString();
+	const sequence = Number.isNaN(trackNumber) ? '-' : trackNumber;
+	const line = `${timestamp}\t${sequence}\t${trackName}\t${fileName}\n`;
+
+	try {
+		await appendFile(musicPlayHistoryFile, line, 'utf8');
+		res.status(204).end();
+	} catch (e) {
+		console.error('Unable to write music play history');
+		console.error(e);
+		res.status(500).json({ error: 'Unable to write music play history' });
+	}
+};
+
 // Configure static asset caching with proper ETags and cache validation
 const staticOptions = {
 	etag: true, // Enable ETag generation
@@ -152,6 +181,8 @@ Object.entries(dataEndpoints).forEach(([name, data]) => {
 		res.json(data);
 	});
 });
+
+app.post('/music-play-history', appendMusicPlayHistory);
 
 if (process.env?.DIST === '1') {
 	// Production ("distribution") mode uses pre-baked files in the dist directory

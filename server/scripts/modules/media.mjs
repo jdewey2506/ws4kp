@@ -8,6 +8,9 @@ let player;
 let sliderTimeout = null;
 let volumeSlider = null;
 let volumeSliderInput = null;
+let currentTrackPlayId = 0;
+let loggedTrackPlayId = null;
+let loggedTrackCount = 0;
 
 const mediaPlaying = new Setting('mediaPlaying', {
 	name: 'Media Playing',
@@ -172,6 +175,7 @@ const startMedia = async () => {
 	} else {
 		try {
 			await player.play();
+			logCurrentTrack();
 			setTrackName(playlist.availableFiles[currentTrack]);
 		} catch (e) {
 			// report the error
@@ -267,7 +271,7 @@ const initializePlayer = () => {
 	player.addEventListener('ended', playerEnded);
 
 	// get the first file
-	player.src = `music/${playlist.availableFiles[currentTrack]}`;
+	setPlayerSource();
 	setTrackName(playlist.availableFiles[currentTrack]);
 	player.type = 'audio/mpeg';
 	// set volume and slider indicator
@@ -291,15 +295,60 @@ const playerEnded = () => {
 		currentTrack = 0;
 	}
 	// update the player source
-	player.src = `music/${playlist.availableFiles[currentTrack]}`;
+	setPlayerSource();
 	setTrackName(playlist.availableFiles[currentTrack]);
 };
 
-const setTrackName = (fileName) => {
+const getTrackName = (fileName) => {
 	const baseName = fileName.split('/').pop();
-	const trackName = decodeURIComponent(
+	return decodeURIComponent(
 		baseName.replace(/\.mp3/gi, '').replace(/(_-)/gi, ''),
 	);
+};
+
+const logCurrentTrack = () => {
+	if (loggedTrackPlayId === currentTrackPlayId) return;
+	loggedTrackPlayId = currentTrackPlayId;
+	loggedTrackCount += 1;
+
+	const fileName = playlist.availableFiles[currentTrack];
+	const trackName = getTrackName(fileName);
+	console.log(`Playing music track ${loggedTrackCount}: ${trackName} (${fileName})`);
+	writeTrackToPlayHistory({
+		trackNumber: loggedTrackCount,
+		trackName,
+		fileName,
+	});
+};
+
+const setPlayerSource = () => {
+	player.src = `music/${playlist.availableFiles[currentTrack]}`;
+	currentTrackPlayId += 1;
+};
+
+const writeTrackToPlayHistory = (track) => {
+	const body = JSON.stringify(track);
+	const url = '/music-play-history';
+
+	if (navigator.sendBeacon) {
+		const payload = new Blob([body], { type: 'application/json' });
+		navigator.sendBeacon(url, payload);
+		return;
+	}
+
+	fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body,
+		keepalive: true,
+	}).catch((e) => {
+		console.error('Unable to write music play history');
+		console.error(e);
+	});
+};
+
+const setTrackName = (fileName) => {
+	const trackName = getTrackName(fileName);
 	document.getElementById('musicTrack').innerHTML = trackName;
 };
 
