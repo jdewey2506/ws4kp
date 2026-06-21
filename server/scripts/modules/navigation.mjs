@@ -7,6 +7,7 @@ import { getPoint } from './utils/weather.mjs';
 import { debugFlag } from './utils/debug.mjs';
 import settings from './settings.mjs';
 import { stationFilter } from './utils/string.mjs';
+import { pauseMedia, playMedia, resetMedia } from './media.mjs';
 
 document.addEventListener('DOMContentLoaded', () => {
 	init();
@@ -292,18 +293,20 @@ const loadDisplay = (direction) => {
 const currentDisplayIndex = () => displays.findIndex((display) => display.active);
 const currentDisplay = () => displays[currentDisplayIndex()];
 
-const setPlaying = (newValue) => {
+const setPlaying = (newValue, { syncMedia = true } = {}) => {
 	playing = newValue;
 	const playButton = document.querySelector('#NavigatePlay');
 	localStorage.setItem('play', playing);
 
 	if (playing) {
+		if (syncMedia) playMedia();
 		noSleep(true).catch(() => {
 			// Wake lock failed, but continue normally
 		});
 		playButton.title = 'Pause';
 		playButton.src = 'images/nav/ic_pause_white_24dp_2x.png';
 	} else {
+		if (syncMedia) pauseMedia();
 		noSleep(false).catch(() => {
 			// Wake lock disable failed, but continue normally
 		});
@@ -331,15 +334,19 @@ const handleNavButton = (button) => {
 			setPlaying(false);
 			break;
 		case 'next':
-			setPlaying(false);
+			setPlaying(false, { syncMedia: false });
 			navTo(msg.command.nextFrame);
 			break;
 		case 'previous':
-			setPlaying(false);
+			setPlaying(false, { syncMedia: false });
 			navTo(msg.command.previousFrame);
 			break;
+		case 'reset':
+			setPlaying(false, { syncMedia: false });
+			resetMedia();
+			break;
 		case 'menu':
-			setPlaying(false);
+			setPlaying(false, { syncMedia: false });
 			postMessage({ type: 'current-weather-scroll', method: 'hide' });
 			if (progress) {
 				progress.showCanvas();

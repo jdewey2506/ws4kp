@@ -197,10 +197,10 @@ if (process.env?.DIST === '1') {
 	app.use('/', express.static('./dist', staticOptions));
 } else {
 	// Development mode serves files from the server directory: 'npm start'
-	app.get('/index.html', index);
+	app.get('/index.html', (req, res) => { index(req, res); });
 	app.use('/geoip', geoip);
 	app.use('/resources', express.static('./server/scripts/modules'));
-	app.get('/', index);
+	app.get('/', (req, res) => { index(req, res); });
 	app.get('/.well-known/appspecific/com.chrome.devtools.json', devTools);
 	app.get('*name', express.static('./server', staticOptions));
 }

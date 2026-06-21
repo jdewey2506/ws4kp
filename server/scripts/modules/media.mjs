@@ -198,6 +198,36 @@ const stopMedia = () => {
 	setIcon();
 };
 
+const playMedia = () => {
+	mediaPlaying.value = true;
+	stateChanged();
+};
+
+const pauseMedia = () => {
+	if (!player) return;
+	player.pause();
+	setTrackName('Not playing');
+};
+
+const resetMedia = () => {
+	hideVolumeSlider();
+	mediaPlaying.value = false;
+
+	if (!player) {
+		setIcon();
+		setTrackName('Not playing');
+		return;
+	}
+
+	player.pause();
+	currentTrack = 0;
+	if (playlist?.availableFiles?.length > 0) {
+		setPlayerSource();
+	}
+	setTrackName('Not playing');
+	setIcon();
+};
+
 const stateChanged = () => {
 	// update the icon
 	setIcon();
@@ -353,6 +383,8 @@ const setTrackName = (fileName) => {
 };
 
 export {
-	// eslint-disable-next-line import/prefer-default-export
 	handleClick,
+	pauseMedia,
+	playMedia,
+	resetMedia,
 };

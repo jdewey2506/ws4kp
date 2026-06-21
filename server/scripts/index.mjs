@@ -351,6 +351,7 @@ const swipeCallBack = (direction) => {
 };
 
 const btnNavigateRefreshClick = () => {
+	postMessage('navButton', 'reset');
 	resetStatuses();
 	loadData();
 
