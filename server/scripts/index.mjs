@@ -2,6 +2,7 @@ import { json } from './modules/utils/fetch.mjs';
 import noSleep from './modules/utils/nosleep.mjs';
 import {
 	message as navMessage, isPlaying, resize, resetStatuses, latLonReceived, isIOS,
+	registerReportCycleHandler,
 } from './modules/navigation.mjs';
 import { round2 } from './modules/utils/units.mjs';
 import { registerHiddenSetting } from './modules/share.mjs';
@@ -10,6 +11,7 @@ import AutoComplete from './modules/autocomplete.mjs';
 import { loadAllData } from './modules/utils/data-loader.mjs';
 import { debugFlag } from './modules/utils/debug.mjs';
 import { parseQueryString } from './modules/utils/setting.mjs';
+import { getNextTravelCity } from './modules/utils/travel-city-cycle.mjs';
 
 document.addEventListener('DOMContentLoaded', () => {
 	init();
@@ -30,6 +32,7 @@ const category = categories.join(',');
 const TXT_ADDRESS_SELECTOR = '#txtLocation';
 const TOGGLE_FULL_SCREEN_SELECTOR = '#ToggleFullScreen';
 const BNT_GET_GPS_SELECTOR = '#btnGetGps';
+let initialCityLoadLogged = false;
 
 const init = async () => {
 	// Load core data first - app cannot function without it
@@ -104,6 +107,7 @@ const init = async () => {
 		width: 490,
 	});
 	window.autoComplete = autoComplete;
+	registerReportCycleHandler(cycleToNextTravelCity);
 
 	// attempt to parse the url parameters
 	const parsedParameters = parseQueryString();
@@ -332,9 +336,62 @@ const loadData = (_latLon, haveDataCallback) => {
 	const { latLon } = loadData;
 	// if there's no data stop
 	if (!latLon) return;
+	if (!initialCityLoadLogged) {
+		const locationName = document.querySelector(TXT_ADDRESS_SELECTOR).value
+			|| localStorage.getItem('latLonQuery')
+			|| `${latLon.lat}, ${latLon.lon}`;
+		writeCityLoadHistory({
+			Name: locationName,
+			Latitude: latLon.lat,
+			Longitude: latLon.lon,
+		});
+		initialCityLoadLogged = true;
+	}
 
 	document.querySelector(TXT_ADDRESS_SELECTOR).blur();
 	latLonReceived(latLon, haveDataCallback);
+};
+
+const cycleToNextTravelCity = () => {
+	if (!settings.cycleTravelCities?.value || !loadData.latLon) return false;
+
+	const nextCity = getNextTravelCity(TravelCities, loadData.latLon);
+	if (!nextCity) return false;
+
+	const txtAddress = document.querySelector(TXT_ADDRESS_SELECTOR);
+	txtAddress.value = nextCity.Name;
+	document.querySelector(BNT_GET_GPS_SELECTOR).classList.remove('active');
+	localStorage.removeItem('latLonFromGPS');
+	localStorage.setItem('latLonQuery', nextCity.Name);
+	writeCityLoadHistory(nextCity);
+	resetStatuses();
+	doRedirectToGeometry({ y: nextCity.Latitude, x: nextCity.Longitude });
+	return true;
+};
+
+const writeCityLoadHistory = (city) => {
+	const body = JSON.stringify({
+		cityName: city.Name,
+		latitude: city.Latitude,
+		longitude: city.Longitude,
+	});
+	const url = '/city-load-history';
+
+	if (navigator.sendBeacon) {
+		const payload = new Blob([body], { type: 'application/json' });
+		navigator.sendBeacon(url, payload);
+		return;
+	}
+
+	fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body,
+		keepalive: true,
+	}).catch((e) => {
+		console.error('Unable to write city load history');
+		console.error(e);
+	});
 };
 
 const swipeCallBack = (direction) => {
@@ -394,7 +451,8 @@ const updateFullScreenNavigate = () => {
 };
 
 const documentKeydown = (e) => {
-	const { key } = e;
+	const { key, code } = e;
+	const controlsActive = document.fullscreenElement || document.activeElement === document.body;
 
 	// Handle Ctrl+K to exit kiosk mode (even when other modifiers would normally be ignored)
 	if (e.ctrlKey && (key === 'k' || key === 'K')) {
@@ -405,10 +463,18 @@ const documentKeydown = (e) => {
 		return false;
 	}
 
+	// Deterministic controls for constrained views such as OBS browser interaction.
+	// C enables city cycling; Shift+C disables it.
+	if (controlsActive && code === 'KeyC' && !e.altKey && !e.ctrlKey) {
+		e.preventDefault();
+		settings.cycleTravelCities.value = !e.shiftKey;
+		return false;
+	}
+
 	// don't trigger on ctrl/alt/shift modified key for other shortcuts
 	if (e.altKey || e.ctrlKey || e.shiftKey) return false;
 
-	if (document.fullscreenElement || document.activeElement === document.body) {
+	if (controlsActive) {
 		switch (key) {
 			case ' ': // Space
 				// don't scroll

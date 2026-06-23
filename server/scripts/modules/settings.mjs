@@ -144,6 +144,11 @@ const init = () => {
 		defaultValue: false,
 		sticky: true,
 	});
+	settings.cycleTravelCities = new Setting('cycleTravelCities', {
+		name: 'Cycle Travel Cities',
+		defaultValue: false,
+		sticky: true,
+	});
 	settings.speed = new Setting('speed', {
 		name: 'Speed',
 		type: 'select',

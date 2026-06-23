@@ -17,6 +17,7 @@ const stationInfo = JSON.parse(await readFile('./datagenerators/output/stations.
 const app = express();
 const port = process.env.WS4KP_PORT ?? 8080;
 const musicPlayHistoryFile = './music-play-history.txt';
+const cityLoadHistoryFile = './city-load-history.txt';
 
 // Set X-Weatherstar header globally for playlist fallback detection
 app.use((req, res, next) => {
@@ -120,6 +121,29 @@ const appendMusicPlayHistory = async (req, res) => {
 	}
 };
 
+const appendCityLoadHistory = async (req, res) => {
+	const cityName = cleanLogValue(req.body?.cityName);
+	const latitude = Number(req.body?.latitude);
+	const longitude = Number(req.body?.longitude);
+
+	if (!cityName || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+		res.status(400).json({ error: 'cityName, latitude, and longitude are required' });
+		return;
+	}
+
+	const timestamp = new Date().toISOString();
+	const line = `${timestamp}\t${cityName}\t${latitude}\t${longitude}\n`;
+
+	try {
+		await appendFile(cityLoadHistoryFile, line, 'utf8');
+		res.status(204).end();
+	} catch (e) {
+		console.error('Unable to write city load history');
+		console.error(e);
+		res.status(500).json({ error: 'Unable to write city load history' });
+	}
+};
+
 // Configure static asset caching with proper ETags and cache validation
 const staticOptions = {
 	etag: true, // Enable ETag generation
@@ -183,6 +207,7 @@ Object.entries(dataEndpoints).forEach(([name, data]) => {
 });
 
 app.post('/music-play-history', appendMusicPlayHistory);
+app.post('/city-load-history', appendCityLoadHistory);
 
 if (process.env?.DIST === '1') {
 	// Production ("distribution") mode uses pre-baked files in the dist directory

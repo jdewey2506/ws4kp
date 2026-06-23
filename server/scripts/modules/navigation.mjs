@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const displays = [];
 let playing = false;
 let progress;
+let reportCycleHandler;
 const weatherParameters = {};
 
 const init = async () => {
@@ -278,6 +279,15 @@ const loadDisplay = (direction) => {
 	// if no suitable display was found at all, do NOT proceed to avoid infinite recursion
 	if (!foundSuitableDisplay) {
 		console.warn('No suitable display found for navigation');
+		return;
+	}
+
+	// Advancing from the last available display to the first marks one complete report cycle.
+	// A registered handler can use the boundary and defer display navigation while new data loads.
+	const wrappedForward = direction > 0 && idx <= curIdx;
+	if (playing && wrappedForward && reportCycleHandler?.()) {
+		// Stop the completed display's timer so it cannot request another city while data is loading.
+		hideAllCanvases();
 		return;
 	}
 
@@ -789,6 +799,10 @@ const registerProgress = (_progress) => {
 	progress = _progress;
 };
 
+const registerReportCycleHandler = (handler) => {
+	reportCycleHandler = handler;
+};
+
 const populateWeatherParameters = (params, point) => {
 	document.querySelector('#spanCity').innerHTML = `${params.city}, `;
 	document.querySelector('#spanState').innerHTML = params.state;
@@ -813,6 +827,7 @@ export {
 	resize,
 	registerDisplay,
 	registerProgress,
+	registerReportCycleHandler,
 	currentDisplay,
 	getDisplay,
 	msg,

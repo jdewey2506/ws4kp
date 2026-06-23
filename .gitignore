@@ -1,6 +1,7 @@
 node_modules
 **/debug.log
 music-play-history.txt
+city-load-history.txt
 server/scripts/custom.js
 
 #music folder

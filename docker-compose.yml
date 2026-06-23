@@ -11,4 +11,5 @@ services:
       - ./docker/custom-corner-logo.js:/app/server/scripts/custom.js:ro
       - ./docker/custom-corner-logo.png:/app/dist/images/logos/custom-corner-logo.png:ro
       - ./music-play-history.txt:/app/music-play-history.txt
+      - ./city-load-history.txt:/app/city-load-history.txt
     restart: unless-stopped

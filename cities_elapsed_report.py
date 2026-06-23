@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print accumulated elapsed times for entries in music-play-history.txt."""
+"""Print accumulated elapsed times for entries in city-load-history.txt."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def parse_entry(line: str) -> HistoryEntry | None:
     except ValueError:
         return None
 
-    return HistoryEntry(parsed_timestamp, parts[2].strip())
+    return HistoryEntry(parsed_timestamp, parts[1].strip())
 
 
 def format_elapsed(total_seconds: int) -> str:
@@ -50,19 +50,19 @@ def read_entries(path: Path) -> list[HistoryEntry]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Report elapsed times from the first music history entry."
+        description="Report elapsed times from the first city history entry."
     )
     parser.add_argument(
         "history_file",
         nargs="?",
-        default="music-play-history.txt",
-        help="Path to the music play history file.",
+        default="city-load-history.txt",
+        help="Path to the city play history file.",
     )
     args = parser.parse_args()
 
     entries = read_entries(Path(args.history_file))
     if not entries:
-        raise SystemExit("No timestamped music history entries found.")
+        raise SystemExit("No timestamped city history entries found.")
 
     first_timestamp = entries[0].timestamp
     for entry in entries:
