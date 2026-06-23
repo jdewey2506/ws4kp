@@ -18,6 +18,13 @@ let playing = false;
 let progress;
 let reportCycleHandler;
 const weatherParameters = {};
+const CITY_TRANSITION_DURATION = 5000;
+const cityTransition = {
+	active: false,
+	dataReady: false,
+	elapsed: false,
+	timeout: null,
+};
 
 const init = async () => {
 	// set up the resize handler with debounce logic to prevent rapid-fire calls
@@ -136,7 +143,7 @@ const getWeather = async (latLon, haveDataCallback) => {
 			document.querySelector('#loading').style.display = 'none';
 			if (progress) {
 				await progress.drawCanvas();
-				progress.showCanvas();
+				if (!isCityTransitionActive()) progress.showCanvas();
 			}
 		}
 
@@ -175,6 +182,11 @@ const updateStatus = (value) => {
 
 	// if this is the first display and we're playing, load it up so it starts playing
 	if (isPlaying() && value.id === firstDisplayIndex && value.status === STATUS.loaded) {
+		if (cityTransition.active) {
+			cityTransition.dataReady = true;
+			if (cityTransition.elapsed) finishCityTransition();
+			return;
+		}
 		navTo(msg.command.firstFrame);
 	}
 };
@@ -190,6 +202,39 @@ const countLoadedDisplays = () => displays.reduce((acc, display) => {
 const hideAllCanvases = () => {
 	displays.forEach((display) => display.hideCanvas());
 };
+
+const finishCityTransition = () => {
+	const transitionElement = document.querySelector('#city-transition-html');
+	transitionElement?.classList.remove('show');
+	cityTransition.active = false;
+
+	if (isPlaying()) {
+		navTo(msg.command.firstFrame);
+	} else if (progress && !settings?.kiosk?.value) {
+		progress.showCanvas();
+	}
+};
+
+const showCityTransition = (cityName) => {
+	const transitionElement = document.querySelector('#city-transition-html');
+	if (!transitionElement) return;
+
+	clearTimeout(cityTransition.timeout);
+	hideAllCanvases();
+	progress?.hideCanvas();
+	document.querySelector('#loading').style.display = 'none';
+	transitionElement.querySelector('.city-name').textContent = cityName;
+	transitionElement.classList.add('show');
+	cityTransition.active = true;
+	cityTransition.dataReady = false;
+	cityTransition.elapsed = false;
+	cityTransition.timeout = setTimeout(() => {
+		cityTransition.elapsed = true;
+		if (cityTransition.dataReady) finishCityTransition();
+	}, CITY_TRANSITION_DURATION * settings.speed.value);
+};
+
+const isCityTransitionActive = () => cityTransition.active;
 
 // is playing interface
 const isPlaying = () => playing;
@@ -828,6 +873,7 @@ export {
 	registerDisplay,
 	registerProgress,
 	registerReportCycleHandler,
+	showCityTransition,
 	currentDisplay,
 	getDisplay,
 	msg,

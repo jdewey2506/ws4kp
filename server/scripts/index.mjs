@@ -2,7 +2,7 @@ import { json } from './modules/utils/fetch.mjs';
 import noSleep from './modules/utils/nosleep.mjs';
 import {
 	message as navMessage, isPlaying, resize, resetStatuses, latLonReceived, isIOS,
-	registerReportCycleHandler,
+	registerReportCycleHandler, showCityTransition,
 } from './modules/navigation.mjs';
 import { round2 } from './modules/utils/units.mjs';
 import { registerHiddenSetting } from './modules/share.mjs';
@@ -336,6 +336,12 @@ const loadData = (_latLon, haveDataCallback) => {
 	const { latLon } = loadData;
 	// if there's no data stop
 	if (!latLon) return;
+	if (_latLon && settings.cycleTravelCities?.value) {
+		const cityName = document.querySelector(TXT_ADDRESS_SELECTOR).value
+			|| localStorage.getItem('latLonQuery')
+			|| `${latLon.lat}, ${latLon.lon}`;
+		showCityTransition(cityName);
+	}
 	if (!initialCityLoadLogged) {
 		const locationName = document.querySelector(TXT_ADDRESS_SELECTOR).value
 			|| localStorage.getItem('latLonQuery')
