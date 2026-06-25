@@ -34,7 +34,21 @@ const TOGGLE_FULL_SCREEN_SELECTOR = '#ToggleFullScreen';
 const BNT_GET_GPS_SELECTOR = '#btnGetGps';
 let initialCityLoadLogged = false;
 
+const resetPlayHistory = async () => {
+	try {
+		await fetch('/play-history/reset', {
+			method: 'POST',
+			keepalive: true,
+		});
+	} catch (e) {
+		console.error('Unable to clear play history files');
+		console.error(e);
+	}
+};
+
 const init = async () => {
+	await resetPlayHistory();
+
 	// Load core data first - app cannot function without it
 	try {
 		await loadAllData(typeof OVERRIDES !== 'undefined' && OVERRIDES.VERSION ? OVERRIDES.VERSION : '');
@@ -413,7 +427,9 @@ const swipeCallBack = (direction) => {
 	}
 };
 
-const btnNavigateRefreshClick = () => {
+const btnNavigateRefreshClick = async () => {
+	await resetPlayHistory();
+	initialCityLoadLogged = false;
 	postMessage('navButton', 'reset');
 	resetStatuses();
 	loadData();

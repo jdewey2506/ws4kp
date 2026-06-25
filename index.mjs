@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import fs from 'fs';
-import { appendFile, readFile } from 'fs/promises';
+import { appendFile, readFile, writeFile } from 'fs/promises';
 import {
 	weatherProxy, radarProxy, outlookProxy, mesonetProxy, forecastProxy,
 } from './proxy/handlers.mjs';
@@ -18,6 +18,18 @@ const app = express();
 const port = process.env.WS4KP_PORT ?? 8080;
 const musicPlayHistoryFile = './music-play-history.txt';
 const cityLoadHistoryFile = './city-load-history.txt';
+const historyFiles = [musicPlayHistoryFile, cityLoadHistoryFile];
+
+const clearHistoryFiles = async () => {
+	await Promise.all(historyFiles.map((file) => writeFile(file, '', 'utf8')));
+};
+
+try {
+	await clearHistoryFiles();
+} catch (e) {
+	console.error('Unable to clear play history files');
+	console.error(e);
+}
 
 // Set X-Weatherstar header globally for playlist fallback detection
 app.use((req, res, next) => {
@@ -144,6 +156,17 @@ const appendCityLoadHistory = async (req, res) => {
 	}
 };
 
+const resetPlayHistory = async (_req, res) => {
+	try {
+		await clearHistoryFiles();
+		res.status(204).end();
+	} catch (e) {
+		console.error('Unable to clear play history files');
+		console.error(e);
+		res.status(500).json({ error: 'Unable to clear play history files' });
+	}
+};
+
 // Configure static asset caching with proper ETags and cache validation
 const staticOptions = {
 	etag: true, // Enable ETag generation
@@ -208,6 +231,7 @@ Object.entries(dataEndpoints).forEach(([name, data]) => {
 
 app.post('/music-play-history', appendMusicPlayHistory);
 app.post('/city-load-history', appendCityLoadHistory);
+app.post('/play-history/reset', resetPlayHistory);
 
 if (process.env?.DIST === '1') {
 	// Production ("distribution") mode uses pre-baked files in the dist directory
