@@ -3,7 +3,7 @@ import express from 'express';
 import fs from 'fs';
 import { appendFile, readFile, writeFile } from 'fs/promises';
 import {
-	weatherProxy, radarProxy, outlookProxy, mesonetProxy, forecastProxy,
+	weatherProxy, radarProxy, outlookProxy, mesonetProxy, weatherCamsProxy, forecastProxy,
 } from './proxy/handlers.mjs';
 import playlist from './src/playlist.mjs';
 import OVERRIDES from './src/overrides.mjs';
@@ -206,6 +206,7 @@ if (!process.env?.STATIC) {
 	app.use('/radar/', radarProxy);
 	app.use('/spc/', outlookProxy);
 	app.use('/mesonet/', mesonetProxy);
+	app.use('/weathercams/', weatherCamsProxy);
 	app.use('/forecast/', forecastProxy);
 
 	// Playlist route is available in server mode (not in static mode)

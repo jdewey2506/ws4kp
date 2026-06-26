@@ -1,0 +1,54 @@
+@use 'shared/_utils'as u;
+
+#weather-cams-html.weather-display {
+	background-image: url('../images/backgrounds/3.png');
+	position: absolute;
+	top: 0;
+	left: 0;
+
+	.header .logo img {
+		width: 76px;
+		height: 59px;
+	}
+}
+
+.weather-display .main.weather-cams {
+	height: 390px;
+	padding: 0 46px;
+	box-sizing: border-box;
+
+	.camera-image {
+		height: 308px;
+		border: 3px solid black;
+		background: black;
+		overflow: hidden;
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+		}
+	}
+
+	.camera-info {
+		height: 72px;
+		padding-top: 8px;
+		font-family: 'Star4000';
+		font-size: 21pt;
+		line-height: 23px;
+		text-align: center;
+		@include u.text-shadow();
+	}
+
+	.camera-location,
+	.camera-direction,
+	.camera-time {
+		white-space: nowrap;
+		overflow: hidden;
+	}
+}
+
+.wide.weather-cams #container {
+	background: url(../images/backgrounds/3-wide.png);
+}

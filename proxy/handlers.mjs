@@ -43,6 +43,20 @@ export const mesonetProxy = async (req, res) => {
 	});
 };
 
+// FAA WeatherCams proxy. The upstream API rejects non-FAA browser origins,
+// so server deployments add the same public headers used by the FAA app.
+export const weatherCamsProxy = async (req, res) => {
+	await cache.handleRequest(req, res, 'https://weathercams.faa.gov', {
+		serviceName: 'FAA WeatherCams',
+		skipParams: [],
+		headers: {
+			prefer: 'blue',
+			origin: 'https://weathercams.faa.gov',
+			referer: 'https://weathercams.faa.gov/',
+		},
+	});
+};
+
 // Legacy forecast.weather.gov API proxy
 export const forecastProxy = async (req, res) => {
 	await cache.handleRequest(req, res, 'https://forecast.weather.gov', {

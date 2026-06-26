@@ -56,6 +56,7 @@
   <script type="module" src="scripts/modules/latestobservations.mjs"></script>
   <script type="module" src="scripts/modules/localforecast.mjs"></script>
   <script type="module" src="scripts/modules/radar.mjs"></script>
+  <script type="module" src="scripts/modules/weathercams.mjs"></script>
   <script type="module" src="scripts/modules/regionalforecast.mjs"></script>
   <script type="module" src="scripts/modules/travelforecast.mjs"></script>
   <script type="module" src="scripts/modules/progress.mjs"></script>
@@ -133,6 +134,9 @@
         </div>
         <div id="radar-html" class="weather-display">
           <%- include('partials/radar.ejs') %>
+        </div>
+        <div id="weather-cams-html" class="weather-display">
+          <%- include('partials/weather-cams.ejs') %>
         </div>
         <div id="hazards-html" class="weather-display">
           <%- include('partials/hazards.ejs') %>

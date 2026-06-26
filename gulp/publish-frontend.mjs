@@ -82,6 +82,7 @@ const mjsSources = [
 	'server/scripts/modules/latestobservations.mjs',
 	'server/scripts/modules/localforecast.mjs',
 	'server/scripts/modules/radar.mjs',
+	'server/scripts/modules/weathercams.mjs',
 	'server/scripts/modules/regionalforecast.mjs',
 	'server/scripts/modules/travelforecast.mjs',
 	'server/scripts/modules/progress.mjs',

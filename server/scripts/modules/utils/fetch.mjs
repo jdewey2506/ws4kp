@@ -77,13 +77,13 @@ const blob = (url, params) => fetchAsync(url, 'blob', params);
 const USER_AGENT_EXCLUDED_HOSTS = [
 	'geocode.arcgis.com',
 	'services.arcgis.com',
+	'weathercams.faa.gov',
 ];
 
 const fetchAsync = async (_url, responseType, _params = {}) => {
-	const headers = {};
-
 	const checkUrl = new URL(_url, window.location.origin);
 	const shouldExcludeUserAgent = USER_AGENT_EXCLUDED_HOSTS.some((host) => checkUrl.hostname.includes(host));
+	const headers = { ...(_params.headers ?? {}) };
 
 	// User-Agent handling:
 	// - Server mode (with caching proxy): Add User-Agent for all requests except excluded hosts
