@@ -27,7 +27,8 @@ def parse_entry(line: str) -> HistoryEntry | None:
     except ValueError:
         return None
 
-    return HistoryEntry(parsed_timestamp, parts[2].strip())
+    title = parts[2].strip().split("_", 1)[0]
+    return HistoryEntry(parsed_timestamp, title)
 
 
 def format_elapsed(total_seconds: int) -> str:
